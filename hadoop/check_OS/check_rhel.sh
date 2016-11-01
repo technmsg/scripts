@@ -6,6 +6,10 @@
 echo "System: $(uname -a)"
 if [ -f /etc/redhat-release ] ; then
   echo ; echo "OS: $(cat /etc/redhat-release)"
+  grep 7.2 /etc/redhat-release
+  if [ "$?" = "0" ] ; then
+    RHEL7=1
+  fi
 else
   echo 'Not RHEL, exiting.'
   exit 1
@@ -14,19 +18,25 @@ fi
 # kernel options
 echo ; echo "Swappiness (current): $(cat /proc/sys/vm/swappiness)"
 echo ; echo "Swappiness (boot): $(grep swappiness /etc/sysctl.conf)"
-echo ; echo "Transparent Huge Pages (enabled): $(cat /sys/kernel/mm/redhat_transparent_hugepage/enabled)"
-echo ; echo "Transparent Huge Pages (defrag): $(cat /sys/kernel/mm/redhat_transparent_hugepage/defrag)"
+echo ; echo "Transparent Huge Pages (enabled): $(cat /sys/kernel/mm/transparent_hugepage/enabled)"
+echo ; echo "Transparent Huge Pages (defrag): $(cat /sys/kernel/mm/transparent_hugepage/defrag)"
 
 # storage
 echo ; echo 'Mounts'
-mount
+mount | grep -v cgroup
 echo ; echo 'Volume Sizing'
 df -h
 
 # iptables
-echo 
-/sbin/chkconfig --list iptables
-/sbin/chkconfig --list ip6tables
+echo
+if [ $RHEL7 ] ; then
+  systemctl list-unit-files --type=service | grep firewalld
+  systemctl list-unit-files --type=service | grep iptables
+  systemctl list-unit-files --type=service | grep ip6tables 
+else
+  /sbin/chkconfig --list iptables
+  /sbin/chkconfig --list ip6tables
+fi
 
 # IPv6
 echo ; echo 'IPv6 (current)'
