@@ -65,4 +65,9 @@ echo ; sestatus
 echo ; echo 'SELinux (boot)'
 grep -v ^# /etc/sysconfig/selinux | grep -v ^$
 
+# network stack
+
+echo ; echo 'net/tcp stack tweaks'
+grep ^net /etc/sysctl.conf
+
 # EOF
